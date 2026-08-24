@@ -15,7 +15,7 @@ PROMPT_TEMPLATE = load_prompt()
 def ask_gemini(question,context):
     prompt = PROMPT_TEMPLATE.format(question=question,context=context)
     response = client.models.generate_content(
-        model = 'gemini-2.5-flash',
+        model = 'gemini-3.6-flash',
         contents = prompt
     )
     return response.text
