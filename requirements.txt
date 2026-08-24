@@ -10,3 +10,4 @@ sickit-learn
 spacy
 torchvision
 pandas
+pypdf
