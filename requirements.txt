@@ -1,0 +1,12 @@
+torch
+huggingface
+transformers
+sentence-transformers
+streamlit
+numpy
+python-dotenv
+google-genai
+sickit-learn
+spacy
+torchvision
+pandas
