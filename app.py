@@ -1,64 +1,79 @@
+
 import streamlit as st
-from modules.pdf_utils import get_text_from_pdf, chunk_text
-from modules.vectordb import build_vector__db, retrieve_context
-from modules.llm import ask_gemini
 from dotenv import load_dotenv
+
+from modules.langchain_rag import build_retriever
+from modules.llm import load_llm
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
 
 load_dotenv()
 
 st.set_page_config(
     page_title="PDF RAG Assistant",
     page_icon="📚",
-    layout="wide",
+    layout="wide"
 )
 
+st.title("📚 PDF RAG Assistant")
 
-collection = None
+llm = load_llm()
 
-pdf_file = st.file_uploader(" ", type=["pdf"], label_visibility="collapsed", help="Upload a PDF file to search and ask questions.")
+uploaded_file = st.file_uploader(
+    "Upload a PDF",
+    type=["pdf"]
+)
 
-if pdf_file is not None:
-    with st.spinner("Processing PDF and building the vector database..."):
-        text = get_text_from_pdf(pdf_file)
-        if not text or not text.strip():
-            st.error("The uploaded PDF does not contain readable text.")
-            st.stop()
+if uploaded_file is not None:
 
-        chunks = chunk_text(text)
-        collection = build_vector__db(chunks)
+    with st.spinner("Processing PDF..."):
+        retriever = build_retriever(uploaded_file)
 
-    st.markdown('<div class="section-title">Ask</div>', unsafe_allow_html=True)
+    st.success("PDF Ready!")
 
-    with st.form("question_form"):
-        c1, c2 = st.columns([8, 1])
-        with c1:
-            question = st.text_input("", placeholder="who is the instructor?", label_visibility="collapsed")
-        with c2:
-            st.form_submit_button("Ask", use_container_width=True)
+    question = st.text_input(
+        "Enter your question:",
+        placeholder="Who is the instructor?"
+    )
 
-    if question and question.strip():
-        with st.spinner("Searching the most relevant information..."):
-            context_chunks = retrieve_context(question, collection, as_list=True)
-            context_text = " ".join(context_chunks)
-            response = ask_gemini(question, context_text)
+    if st.button("Ask") and question.strip():
 
-        st.markdown('<div class="section-title">Answer</div>', unsafe_allow_html=True)
-        st.markdown(f"<div class='answer-box'>{response}</div>", unsafe_allow_html=True)
+        docs = retriever.invoke(question)
 
-        st.markdown('<div class="section-title">Retrieved Context</div>', unsafe_allow_html=True)
-
-        context_display = " ".join(
-            f"Relevant passage {idx}: {chunk}" for idx, chunk in enumerate(context_chunks, start=1)
+        context = "\n\n".join(
+            doc.page_content
+            for doc in docs
         )
 
-        st.markdown(
-            f"""
-            <div class="context-box">
-                <span class="context-title">Relevant passages</span>
-                {context_display}
-            </div>
-            """,
-            unsafe_allow_html=True,
+        prompt = ChatPromptTemplate.from_template(
+            """
+            Answer the question using only the context below.
+
+            Context:
+            {context}
+
+            Question:
+            {question}
+
+            Answer:
+            """
         )
-else:
-    st.info("Upload a PDF to begin.")
+
+        chain = prompt | llm | StrOutputParser()
+
+        answer = chain.invoke({
+            "context": context,
+            "question": question
+        })
+
+        st.subheader("Answer")
+        st.write(answer)
+
+        st.subheader("Retrieved Context")
+
+        for i, doc in enumerate(docs, start=1):
+            with st.expander(f"Relevant Passage {i}"):
+                st.write(doc.page_content)
+
