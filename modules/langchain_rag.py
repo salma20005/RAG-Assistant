@@ -5,11 +5,10 @@ import tempfile
 import uuid
 # embedding
 from langchain_huggingface import HuggingFaceEmbeddings
-# from modules.embedding import load_model
-# embedding_model = load_model()
+from modules.embedding import load_model
+embedding_model = load_model()
 # build retriever
 def build_retriever(file):
-    # TEMP
     with tempfile.NamedTemporaryFile(delete=False,suffix=".pdf") as temp:
         temp.write(file.read())
         temp.flush()
@@ -35,5 +34,6 @@ def build_retriever(file):
         # search engine
         # get top k documents
         retriever = db.as_retriever(search_kwargs={"k": 5})
-        return retriever
+
+        return  retriever
 

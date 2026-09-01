@@ -35,7 +35,7 @@ if uploaded_file is not None:
 
     question = st.text_input(
         "Enter your question:",
-        placeholder="Who is the instructor?"
+         placeholder="Who is the instructor?"
     )
 
     if st.button("Ask") and question.strip():
