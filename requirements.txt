@@ -6,8 +6,15 @@ streamlit
 numpy
 python-dotenv
 google-genai
-sickit-learn
+scikit-learn
 spacy
 torchvision
 pandas
 pypdf
+chromadb
+langchain 
+langchain-community
+langchain-google-genai
+langchain-huggingface
+ollama
+langchain-ollama

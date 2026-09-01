@@ -18,7 +18,7 @@ def build_vector__db(chunks):
     collection.add(ids=ids, documents=chunks, embeddings=embeddings)
     return collection
 
-
+# Retriever
 def retrieve_context(question, collection, n_results=3, as_list=False):
     query_embedding = embedding_model.encode(question)
     results = collection.query(

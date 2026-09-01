@@ -6,8 +6,9 @@ def get_text_from_pdf(pdf_file):
         text += page.extract_text()
     return text
 ## chunking text
-def chunk_text(text, chunk_size=500):
-    chunks = []
-    for i in range(0, len(text), chunk_size):
-        chunks.append(text[i:i+chunk_size])
-    return chunks
+# will use instead Text Splitter
+# def chunk_text(text, chunk_size=500):
+#     chunks = []
+#     for i in range(0, len(text), chunk_size):
+#         chunks.append(text[i:i+chunk_size])
+#     return chunks
