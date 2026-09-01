@@ -1,36 +1,64 @@
 # PDF RAG Assistant
 
-A Streamlit-based Retrieval-Augmented Generation (RAG) application that lets users upload a PDF, extract its content, build a vector database, and ask questions about the document using Gemini.
+A Streamlit-based document question answering app that was originally built with a manual RAG pipeline and later migrated to a LangChain-based architecture for cleaner orchestration, retrieval, and prompting.
 
 ## Overview
 
-This project demonstrates a practical document Q&A workflow:
+This project demonstrates how we moved from a custom Retrieval-Augmented Generation (RAG) workflow to a LangChain implementation while keeping the same goal: answer questions from uploaded PDF documents using contextual retrieval and an LLM.
 
-- Upload a PDF file
+### What we did before: Manual RAG
+
+In the initial version, we built the workflow manually using core Python components:
+
+- Upload a PDF
 - Extract text from the document
-- Split the content into manageable chunks
-- Generate embeddings for each chunk
-- Store the embeddings in a vector database
-- Retrieve the most relevant context for a user question
-- Use Gemini to generate a grounded answer based on the retrieved content
+- Split the document into chunks
+- Generate embeddings for each chunk using SentenceTransformers
+- Store the embeddings in ChromaDB
+- Retrieve the most relevant chunks for a question
+- Pass the retrieved context to Gemini for answer generation
 
-## Features
+This version gave us a full understanding of how RAG works internally, including: text loading, chunking, vector storage, semantic retrieval, and LLM prompting.
 
-- PDF text extraction using PyPDF
-- Text chunking for efficient retrieval
-- Embedding generation using SentenceTransformers
-- Vector similarity search with ChromaDB
-- LLM-powered answer generation using Google Gemini
-- Simple interactive UI built with Streamlit
+### What we do now: LangChain RAG
 
-## Tech Stack
+We later switched to LangChain to make the pipeline more structured and reusable. The current implementation uses LangChain tools and abstractions:
+
+- LangChain PDF loader for document ingestion
+- RecursiveCharacterTextSplitter for chunking
+- HuggingFaceEmbeddings for embeddings
+- Chroma vector store for indexing and retrieval
+- A retriever built with `db.as_retriever(search_kwargs={"k": 5})`
+- `ChatPromptTemplate` to format the final prompt
+- `prompt | llm | StrOutputParser()` to build a cleaner answer-generation chain
+
+This makes the process easier to manage and more modular than the manual version.
+
+## Project Flow
+
+### Manual RAG Process
+
+```text
+PDF -> text extraction -> chunking -> embeddings -> vector database
+User question -> embedding -> similarity search -> Gemini -> answer
+```
+
+### LangChain RAG Process
+
+```text
+PDF -> PyPDFLoader -> RecursiveCharacterTextSplitter -> Chroma + embeddings
+User question -> retriever.invoke(question) -> relevant chunks -> prompt template -> Gemini -> answer
+```
+
+## Current Tech Stack
 
 - Python
 - Streamlit
+- LangChain
 - PyPDF
-- SentenceTransformers
 - ChromaDB
-- Google GenAI SDK
+- HuggingFace Embeddings
+- Google Gemini
 - Python Dotenv
 
 ## Project Structure
@@ -46,10 +74,21 @@ This project demonstrates a practical document Q&A workflow:
 │   ├── __init__.py
 │   ├── embedding.py
 │   ├── llm.py
+│   ├── langchain_rag.py
 │   ├── pdf_utils.py
 │   └── vectordb.py
 └── .env
 ```
+
+## Why the switch to LangChain?
+
+The manual version helped us learn the fundamentals of RAG, but the LangChain version improved the workflow in several ways:
+
+- cleaner code structure
+- easier retrieval pipeline setup
+- better integration with LLM prompting
+- reusable LangChain components
+- simpler scaling for future features
 
 ## Prerequisites
 
@@ -65,7 +104,7 @@ Before running the project, make sure you have:
 
 ```bash
 git clone <repository-url>
-cd "Final Project"
+cd "RAG-Assistant"
 ```
 
 2. Create and activate a virtual environment:
@@ -106,26 +145,11 @@ Then open the local URL shown in the terminal, typically:
 http://localhost:8501
 ```
 
-## How It Works
-
-1. The user uploads a PDF.
-2. The system extracts text from all pages.
-3. The text is split into chunks.
-4. Each chunk is converted into an embedding vector.
-5. Similarity search finds the most relevant chunks for the query.
-6. Gemini receives the question and retrieved context to produce a final answer.
-
-## Example Flow
-
-```text
-PDF -> text extraction -> chunking -> embeddings -> vector DB
-User question -> embedding -> semantic retrieval -> Gemini -> answer
-```
-
 ## Notes
 
 - This application is designed for document-grounded Q&A rather than general-purpose chat.
-- The quality of responses depends on the PDF content, chunking strategy, and retrieval quality.
+- The quality of results depends on PDF quality, chunk size, retrieval quality, and the LLM used.
+- The earlier manual implementation was an important learning step before moving to the LangChain version.
 - Ensure your API key is valid and stored securely in the `.env` file.
 
 ## License
@@ -134,4 +158,4 @@ This project is for educational and demonstration purposes.
 
 ## Author
 
-Created as a final project demonstrating RAG-based document intelligence with Gemini and vector search.
+Created to demonstrate the journey from a manual RAG implementation to a cleaner, production-friendly LangChain-based document intelligence workflow.
